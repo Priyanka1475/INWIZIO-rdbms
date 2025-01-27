@@ -1,0 +1,158 @@
+CREATE TABLE departments (
+    department_id INT PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL UNIQUE -- Ensures department names are unique
+);
+
+CREATE TABLE students (
+    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    date_of_birth DATE NOT NULL,
+    enrollment_date DATE DEFAULT CURRENT_DATE,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE professors (
+    professor_id INT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL
+);
+
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100) NOT NULL,
+    department_id INT,
+    professor_id INT,
+    credits INT CHECK (credits > 0),
+    FOREIGN KEY (professor_id) REFERENCES professors(professor_id),
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+);
+
+CREATE TABLE student_courses (
+    student_id INT,
+    course_id INT,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+CREATE TABLE enrollments(
+enrollment_id INT PRIMARY KEY,
+student_id INT,
+course_id INT,
+enrollment_date DATE,
+grade VARCHAR(5),
+FOREIGN KEY (student_id) REFERENCES students(student_id),
+FOREIGN KEY (course_id) REFERENCES courses(course_id)
+
+)
+
+
+query-1
+SELECT d.department_name,
+COUNT(s.student_id) AS total_students
+FROM departments d LEFT JOIN students s
+ON d.department_id = s.department_id
+GROUP BY d.department_id, d.department_name;
+
+query-2
+SELECT c.course_name
+FROM  professors AS p
+INNER JOIN courses AS c 
+ON  p.professor_id = c.professor_id
+WHERE p.first_name = 'Alan';
+
+query-3
+SELECT 
+    c.course_name, 
+    AVG(
+        CASE 
+            WHEN e.grade = 'A+' THEN 4.5
+            WHEN e.grade = 'A' THEN 4
+            WHEN e.grade = 'B' THEN 3
+            WHEN e.grade = 'C' THEN 2
+            WHEN e.grade = 'D' THEN 1
+            WHEN e.grade = 'F' THEN 0
+            ELSE NULL
+        END
+    ) AS average_grade
+FROM 
+    enrollments AS e
+INNER JOIN 
+    courses AS c
+ON 
+    e.course_id = c.course_id
+GROUP BY 
+    c.course_name;
+
+query-4
+SELECT s.student_id, s.first_name, s.last_name
+FROM students AS s
+LEFT JOIN enrollments AS e
+ON s.student_id = e.student_id
+WHERE e.student_id IS NULL;
+
+query-5
+SELECT d.department_name, COUNT(course_name) AS course_count
+FROM departments as d
+LEFT JOIN 
+courses as c
+ON d.department_id = c.department_id
+GROUP BY d.department_name
+
+query-6
+SELECT s.student_id, s.first_name, s.last_name, c.course_name
+FROM students AS s
+INNER JOIN enrollments AS e
+ON s.student_id = e.student_id
+INNER JOIN courses AS c
+ON e.course_id = c.course_id
+WHERE c.course_name = 'algorithms';
+
+query-7
+SELECT c.course_name, COUNT(e.student_id) AS enrollment_count
+FROM courses AS c
+LEFT JOIN enrollments AS e
+ON c.course_id = e.course_id
+GROUP BY c.course_name
+ORDER BY enrollment_count DESC
+LIMIT 1;
+
+query-8
+SELECT d.department_name, AVG(c.credits) AS avg_credits_per_student
+FROM students AS s
+INNER JOIN enrollments AS e
+ON s.student_id = e.student_id
+INNER JOIN courses AS c
+ON e.course_id = c.course_id
+INNER JOIN departments AS d
+ON s.department_id = d.department_id
+GROUP BY d.department_name;
+
+query 9
+SELECT p.first_name, COUNT(DISTINCT c.department_id) AS count_departments
+FROM professors AS p
+INNER JOIN courses AS c
+ON p.professor_id = c.professor_id
+GROUP BY p.first_name
+HAVING count_departments > 1;
+
+query-10
+SELECT c.course_name, 
+       MAX(e.grade) AS highest_grade, 
+       MIN(e.grade) AS lowest_grade
+FROM enrollments AS e
+INNER JOIN courses AS c
+ON e.course_id = c.course_id
+WHERE c.course_name = 'physics'  
+GROUP BY c.course_name;
+
+
+
+
