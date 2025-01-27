@@ -1,0 +1,171 @@
+-CREATE TABLE drivers (
+    driverid INT PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    vehicletype VARCHAR(100) NOT NULL,
+    rating INT CHECK (rating <= 5)
+);
+
+CREATE TABLE  riders(
+riderid INT PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    joindate DATE NOT NULL
+);
+
+CREATE TABLE rides (
+    rideid INT PRIMARY KEY,
+    riderid INT,
+    driverid INT,
+    ridedate DATE NOT NULL,
+    pickuplocation VARCHAR(100) NOT NULL,
+    droplocation VARCHAR(100) NOT NULL,
+    distance INT,          --
+    fare DECIMAL(10, 2),   
+   ridestatus VARCHAR(50) CHECK (ridestatus IN ('Completed', 'Ongoing', 'Cancelled')),
+    FOREIGN KEY (riderid) REFERENCES riders(riderid),  
+    FOREIGN KEY (driverid) REFERENCES drivers(driverid) 
+);
+
+CREATE TABLE payments(
+paymentid INT PRIMARY KEY,
+rideid INT,
+payment_method VARCHAR(50) CHECK (payment_method IN ('Card', 'Cash', 'Wallet')),
+amount DECIMAL(10 ,2 ),
+paymentdate DATE NOT NULL
+
+);
+
+
+-- Insert into drivers
+INSERT INTO drivers (driverid, firstname, lastname, phone, vehicletype, rating)
+VALUES
+(1, 'John', 'Doe', '1234567890', 'Sedan', 5),
+(2, 'Jane', 'Smith', '9876543210', 'SUV', 4),
+(3, 'Alan', 'Brown', '5555555555', 'Hatchback', 3);
+
+-- Insert into riders
+INSERT INTO riders (riderid, firstname, lastname, phone, city, joindate)
+VALUES
+(1, 'Alice', 'Green', '1112223333', 'New York', '2024-01-01'),
+(2, 'Bob', 'White', '4445556666', 'Los Angeles', '2023-12-15'),
+(3, 'Charlie', 'Blue', '7778889999', 'Chicago', '2024-02-10');
+
+-- Insert into rides
+INSERT INTO rides (rideid, riderid, driverid, ridedate, pickuplocation, droplocation, distance, fare, ridestatus)
+VALUES
+(1, 1, 1, '2024-01-25', 'Location A', 'Location B', 10, 150.75, 'Completed'),
+(2, 2, 2, '2024-01-26', 'Location C', 'Location D', 15, 200.50, 'Ongoing'),
+(3, 3, 3, '2024-01-27', 'Location E', 'Location F', 8, 100.00, 'Cancelled');
+
+-- Insert into payments
+INSERT INTO payments (paymentid, rideid, payment_method, amount, paymentdate)
+VALUES
+(1, 1, 'Card', 150.75, '2024-01-25'),
+(2, 2, 'Cash', 200.50, '2024-01-26'),
+(3, 3, 'Wallet', 100.00, '2024-01-27');
+
+--query 1
+
+SELECT phone, firstname, lastname 
+FROM drivers 
+WHERE rating>=4
+
+-- query2
+SELECT d.firstname, COUNT(r.rideid) AS rides
+FROM drivers AS d
+LEFT JOIN rides AS r ON d.driverid = r.driverid
+WHERE r.ridestatus = 'Completed'
+GROUP BY d.firstname;
+
+-- query3
+SELECT rider.firstname
+FROM riders AS rider
+LEFT JOIN rides
+ON rider.riderid = rides.riderid
+WHERE rides.rideid IS NULL;
+
+-- query4
+SELECT 
+    d.firstname AS driver_name, 
+    SUM(r.fare) AS total_earnings
+FROM 
+    drivers AS d
+INNER JOIN 
+    rides AS r 
+ON 
+    d.driverid = r.driverid
+WHERE 
+    r.ridestatus = 'Completed'
+GROUP BY 
+    d.driverid, d.firstname;
+
+-- query5
+SELECT 
+    d.driverid, 
+    d.firstname AS driver_name, 
+    MAX(r.ridedate) AS most_recent_ride
+FROM 
+    drivers AS d
+LEFT JOIN 
+    rides AS r 
+ON 
+    d.driverid = r.driverid
+GROUP BY 
+    d.driverid, d.firstname;
+
+-- query6
+SELECT 
+    r.city, 
+    COUNT(ri.rideid) AS total_rides
+FROM 
+    riders AS r
+INNER JOIN 
+    rides AS ri 
+ON 
+    r.riderid = ri.riderid
+GROUP BY 
+    r.city;
+
+-- query7
+SELECT * 
+FROM rides
+WHERE distance > 20;
+
+-- query8
+SELECT payment_method, COUNT(paymentid) AS method_count
+FROM payments
+GROUP BY payment_method
+ORDER BY method_count DESC
+LIMIT 1;
+
+-- query9
+SELECT d.driverid, d.firstname, d.lastname, SUM(p.amount) AS total_earnings
+FROM drivers AS d
+INNER JOIN rides AS r ON d.driverid = r.driverid
+INNER JOIN payments AS p ON r.rideid = p.rideid
+WHERE r.ridestatus = 'Completed'
+GROUP BY d.driverid, d.firstname, d.lastname
+ORDER BY total_earnings DESC
+LIMIT 3;
+
+-- query10
+SELECT 
+    r.rideid,
+    r.ridedate,
+    r.pickuplocation,
+    r.droplocation,
+    r.distance,
+    r.fare,
+    d.firstname AS driver_firstname,
+    d.lastname AS driver_lastname,
+    ri.firstname AS rider_firstname,
+    ri.lastname AS rider_lastname
+FROM rides AS r
+INNER JOIN drivers AS d ON r.driverid = d.driverid
+INNER JOIN riders AS ri ON r.riderid = ri.riderid
+WHERE r.ridestatus = 'Cancelled';
+
