@@ -82,5 +82,84 @@ SELECT firstname, lastname, phone
 FROM employees
 WHERE hiredate > '2023-01-01';
 
+-- query2
+SELECT d.departmentname, SUM(p.amount) AS total_payroll
+FROM department AS d
+LEFT JOIN employees AS e
+ON d.departmentid = e.departmentid
+LEFT JOIN payroll AS p
+ON e.employeeid = p.employeeid
+GROUP BY d.departmentname;
+
+-- query3
+SELECT e.firstname 
+FROM employees AS e
+WHERE e.managerid IS NULL;
+
+-- query4
+SELECT 
+    d.departmentname, 
+    e.firstname AS employee_name, 
+    e.salary AS highest_salary
+FROM department AS d
+JOIN employees AS e 
+ON d.departmentid = e.departmentid
+WHERE e.salary = (
+        SELECT MAX(salary) 
+        FROM employees 
+        WHERE departmentid = d.departmentid
+    );
+
+-- query5
+SELECT 
+    e.employeeid, 
+    e.firstname, 
+    pr.review_date, 
+    pr.comments
+FROM 
+    employees AS e
+JOIN 
+    performancereview AS pr 
+ON 
+    e.employeeid = pr.employeeid
+WHERE 
+    pr.review_date = (
+        SELECT MAX(review_date)
+        FROM performancereview
+        WHERE employeeid = e.employeeid
+    );
+
+-- query6
+SELECT d.departmentname, COUNT(e.firstname)
+FROM department as d INNER JOIN employees as e
+on d.departmentid = e.departmentid
+GROUP BY d.departmentname
+
+-- query7
+SELECT e.firstname, e.lastname, e.departmentid, pr.performance_score
+FROM employees AS e
+INNER JOIN performancereviews AS pr
+ON e.employeeid = pr.employeeid
+WHERE pr.performance_score = 'Excellent';
+
+SELECT paymentmethods as method, COUNT(*) AS method_count
+FROM payroll
+GROUP BY method
+ORDER BY method_count DESC
+LIMIT 1;
+
+-- query8
+SELECT e.firstname, e.lastname, e.salary, d.departmentname
+FROM employees AS e
+INNER JOIN department AS d ON e.departmentid = d.departmentid
+ORDER BY e.salary DESC
+LIMIT 5;
+
+-- query9
+SELECT e.firstname, e.lastname, e.email, e.phone, e.hiredate, e.salary
+FROM employees AS e
+WHERE e.managerid = 1;
+
+
 
 
