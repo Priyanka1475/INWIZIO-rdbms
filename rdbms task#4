@@ -1,0 +1,86 @@
+CREATE TABLE department (
+    departmentid INT PRIMARY KEY,
+    departmentname VARCHAR(100),
+    managerid INT
+);
+
+CREATE TABLE employees (
+    employeeid INT PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(50) UNIQUE NOT NULL,
+    hiredate DATE,
+    departmentid INT,
+    managerid INT,
+    salary INT,
+    FOREIGN KEY (departmentid) REFERENCES department(departmentid)
+);
+
+
+ALTER TABLE department
+ADD FOREIGN KEY (managerid) REFERENCES employees(employeeid);
+
+
+CREATE TABLE performancereviews (
+    reviewid INT PRIMARY KEY,
+    employeeid INT,
+    reviewdate DATE NOT NULL,
+    performance_score VARCHAR(50) CHECK (performance_score IN ('Excellent', 'Average', 'Good', 'Poor')),
+    comments VARCHAR(500),
+    FOREIGN KEY (employeeid) REFERENCES employees(employeeid)
+);
+
+CREATE TABLE payroll (
+    payrollid INT PRIMARY KEY,
+    employeeid INT,
+    paymentdate DATE,
+    amount INT,
+    paymentmethods VARCHAR(50) CHECK(paymentmethods IN ('Bank', 'Transfer', 'Check')),
+    FOREIGN KEY (employeeid) REFERENCES employees(employeeid)
+);
+
+--Insert departments first, without managerid
+INSERT INTO department (departmentid, departmentname)
+VALUES 
+(1, 'Sales'),
+(2, 'Marketing'),
+(3, 'HR');
+
+--  Insert employees
+INSERT INTO employees (employeeid, firstname, lastname, email, phone, hiredate, departmentid, managerid, salary)
+VALUES 
+(1, 'John', 'Doe', 'john.doe@example.com', '123-456-7890', '2022-01-15', 1, NULL, 60000),
+(2, 'Jane', 'Smith', 'jane.smith@example.com', '123-456-7891', '2021-05-10', 2, NULL, 55000),
+(3, 'Michael', 'Johnson', 'michael.johnson@example.com', '123-456-7892', '2020-09-30', 1, NULL, 70000),
+(4, 'Emily', 'Davis', 'emily.davis@example.com', '123-456-7893', '2019-03-12', 2, NULL, 65000),
+(5, 'David', 'Brown', 'david.brown@example.com', '123-456-7894', '2018-07-22', 3, NULL, 75000);
+
+-- Update departments with managerid (ensure managerid exists in employees)
+UPDATE department SET managerid = 3 WHERE departmentid = 1; -- Sales manager
+UPDATE department SET managerid = 4 WHERE departmentid = 2; -- Marketing manager
+UPDATE department SET managerid = 5 WHERE departmentid = 3; -- HR manager
+
+
+-- Inserting data into performancereviews table
+
+(1, 1, '2023-12-15', 'Excellent', 'John consistently exceeds targets and is a valuable team member.'),
+(2, 2, '2023-11-10', 'Good', 'Jane meets her goals and is a reliable employee.'),
+(3, 3, '2023-10-05', 'Average', 'Michael needs to improve his communication skills but performs adequately.'),
+(4, 4, '2023-09-20', 'Excellent', 'Emily is a great leader and always delivers results.'),
+(5, 5, '2023-08-18', 'Poor', 'David needs to improve his management skills and team collaboration.');
+
+-- Inserting data into payroll table
+(1, 1, '2023-12-31', 5000, 'Bank'),
+(2, 2, '2023-11-30', 4500, 'Transfer'),
+(3, 3, '2023-10-31', 5500, 'Check'),
+(4, 4, '2023-09-30', 6000, 'Bank'),
+(5, 5, '2023-08-31', 6500, 'Transfer');
+
+-- query1
+SELECT firstname, lastname, phone
+FROM employees
+WHERE hiredate > '2023-01-01';
+
+
+
